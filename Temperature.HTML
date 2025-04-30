@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        /* Reset default margins and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Main page layout */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        /* Container for weather content */
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            margin-top: 40px;
+        }
+
+        /* Main heading style */
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* Input group layout */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Input field styling */
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        /* Search button styling */
+        button {
+            padding: 12px 24px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        /* Button hover effect */
+        button:hover {
+            background: #1557b0;
+        }
+
+        /* Weather result section - hidden by default */
+        .weather-result {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        /* Active state for weather result display */
+        .weather-result.active {
+            display: block;
+        }
+
+        /* Temperature display style */
+        .temp {
+            font-size: 48px;
+            font-weight: bold;
+            color: #1a73e8;
+            margin: 10px 0;
+        }
+
+        /* Weather condition text style */
+        .condition {
+            font-size: 20px;
+            color: #666;
+        }
+
+        /* Location text style */
+        .location {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        /* Error message styling */
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        
+        <!-- Input section -->
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="locationInput" 
+                placeholder="Enter city name"
+                autocomplete="off"
+            >
+            <button onclick="fetchWeather()">Search</button>
+        </div>
+
+        <!-- Error message container -->
+        <div class="error" id="errorMessage"></div>
+
+        <!-- Weather information display -->
+        <div class="weather-result" id="weatherResult">
+            <div class="location" id="locationName"></div>
+            <div class="temp" id="temperature"></div>
+            <div class="condition" id="weatherCondition"></div>
+        </div>
+    </div>
+
+    <script>
+        // API configuration
+        const apiKey = '1188c8ff4717491db23160438252403';
+        
+        // DOM elements
+        const locationInput = document.getElementById('locationInput');
+        const weatherResult = document.getElementById('weatherResult');
+        const errorMessage = document.getElementById('errorMessage');
+        const locationName = document.getElementById('locationName');
+        const temperature = document.getElementById('temperature');
+        const weatherCondition = document.getElementById('weatherCondition');
+
+        // Main function to fetch weather data
+        async function fetchWeather() {
+            const location = locationInput.value.trim();
+            
+            // Validate input
+            if (!location) {
+                showError('Please enter a location');
+                return;
+            }
+
+            try {
+                // API request
+                const response = await fetch(
+                    `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=yes`
+                );
+
+                // Handle HTTP errors
+                if (!response.ok) {
+                    throw new Error('Location not found');
+                }
+
+                // Process successful response
+                const data = await response.json();
+                displayWeather(data);
+            } catch (error) {
+                // Handle any errors
+                showError(error.message);
+            }
+        }
+
+        // Display weather data in UI
+        function displayWeather(data) {
+            // Destructure required data from response
+            const { name, region, country } = data.location;
+            const { temp_c, condition } = data.current;
+
+            // Update DOM elements
+            locationName.textContent = `${name}, ${region}, ${country}`;
+            temperature.textContent = `${temp_c}°C`;
+            weatherCondition.textContent = condition.text;
+            
+            // Show weather result and hide errors
+            weatherResult.classList.add('active');
+            errorMessage.style.display = 'none';
+        }
+
+        // Show error message to user
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            weatherResult.classList.remove('active');
+        }
+
+        // Add Enter key support for input field
+        locationInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchWeather();
+            }
+        });
+    </script>
+</body>
+</html>
